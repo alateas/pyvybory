@@ -1,2 +1,2 @@
-# vybory-api
-API для данных системы ГАС Выборы
+# pyvybory
+Library for getting data from Russian elections system
