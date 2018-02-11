@@ -130,7 +130,6 @@ class FinalResults:
                 area_item['name'] = td.text
                 a = td.find('a')
                 if a:
-                    # area_item['id'] = get_url_param(a['href'], "vibid")
                     area_item['url'] = a['href']
                 area_data.append(area_item)
             area_data = self._add_params_data(area_data, self._params_list, soup)
@@ -140,10 +139,6 @@ class FinalResults:
             # area_item['name'] = region_name
             area_item['url'] = url
             return [area_item, ]
-
-    # def _get_region_url(self, region_id):
-    #     return Elections.base_url + "/region/region/izbirkom?action=show&tvd={}&vrn={}&region=0&global=1&sub_region=0&prver=0&pronetvd=null&vibid={}&type=227".format(
-    #         self._url_parts['global_tvd'], self._url_parts['vrn'], region_id)
 
     def _get_tik_real_url(self, first_tik_url):
         soup = get_soup(first_tik_url)
@@ -169,23 +164,8 @@ class FinalResults:
                 res[param] = int(trs[self._params[param]].find_all("td")[2].text)
         return res
         
-    # def _get_region_data(self, region_url):
-    #     soup = get_soup(region_url)
-    #     return self._get_area_data(soup)
-        
-    # def _get_tik_data(self, tik_url):
-    #     soup = get_soup(tik_url)
-    #     return self._get_area_data(soup)
-    
     def _append_tik_data(self, data_set, tik_index, region_id, tik_id):
         data_set[tik_index]['uiks'] = self._get_tik_data(region_id, tik_id)
-
-    # def _get_regions(self):
-    #     soup = get_soup(self._sum_url)
-    #     regions = self._get_area_data(soup)
-    
-    # def _get_tiks(self)
-
 
     def get_summary(self):
         return self._get_left_table_data(self._sum_url)
