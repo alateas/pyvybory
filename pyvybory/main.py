@@ -1,7 +1,6 @@
 from bs4 import BeautifulSoup
 import urllib.request
 from urllib.parse import urlparse, parse_qs
-import threading
 
 def get_soup(url):
     with urllib.request.urlopen(url) as response:
