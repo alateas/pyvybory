@@ -16,6 +16,7 @@ class Elections:
 
 class PresidentElections(Elections):
     _president_elections_ids= {
+        2004: 1001000882950,
         2008: 100100022176412,
         2012: 100100031793505,
         2018: 100100084849062
@@ -79,8 +80,9 @@ class FinalResults:
     def _get_sum_url(self, elections_url):
         soup = get_soup(elections_url)
         a = soup.find('a', href=True, text="Сводная таблица результатов выборов")
-        self._url_parts['global_tvd'] = get_url_param(a['href'], 'tvd')
-        self._url_parts['vrn'] = get_url_param(a['href'], 'vrn')
+        if not a:
+            a = soup.find('a', href=True, text="Сводная таблица о результатах выборов")
+
         return a['href']
     
     def _get_row_data(self, row):
@@ -173,10 +175,7 @@ class FinalResults:
         return self._get_area_data(self._sum_url)
 
     def get_tiks_by_region_url(self, region_url):
-        # print("[S]{}".format(region_url))
-        data = self._get_area_data(region_url)
-        # print("[F]{}".format(region_url))
-        return data
+        return self._get_area_data(region_url)
     
     def get_uiks_by_tik_url(self, tik_url):
         return self._get_area_data(tik_url, True)
@@ -189,30 +188,37 @@ class FinalResults:
         params['candidates'] = {}
         candidate_flag = False
         for tr in tbl.find_all("tr"):
-            number_td = tr.find("td", {'style': 'color:black', 'width': '5%'})
-            caption_td = tr.find("td", {'style': 'color:black', 'width': '50', 'align': 'left'})
-            summ_td = tr.find("td", {'style': 'color:black', 'align': 'right'})
+            tds = tr.find_all("td")
+            number_td = tds[0]
+            caption_td = tds[1]
             if caption_td:
                 caption = caption_td.text.strip()
                 if candidate_flag:
                     params['candidates'][counter] = caption
                 if caption in ('Число избирателей, включенных в список избирателей',
-                    'Число избирателей, включенных в списки избирателей'):
+                    'Число избирателей, включенных в списки избирателей',
+                    'Число избирателей, внесенных в список'):
                     params['listed_voters'] = counter
                 if caption in ('Число избирательных бюллетеней, полученных участковой избирательной комиссией',
-                    'Число избирательных бюллетеней, полученных участковыми избирательными комиссиями'):
+                    'Число избирательных бюллетеней, полученных участковыми избирательными комиссиями',
+                    'Число полученных избирательных бюллетеней'):
                     params['got_ballots_by_uik'] = counter
-                if caption == 'Число избирательных бюллетеней, выданных избирателям, проголосовавшим досрочно':
+                if caption in ('Число избирательных бюллетеней, выданных избирателям, проголосовавшим досрочно',
+                    'Число избирательных бюллетеней, выданных досрочно',
+                    'Число избирательных бюллетеней, выданных  досрочно'):
                     params['issued_ballots_early_voters'] = counter
                 if caption in ('Число избирательных бюллетеней, выданных в помещении для голосования в день голосования',
-                    'Число избирательных бюллетеней, выданных в помещениях для голосования в день голосования'):
+                    'Число избирательных бюллетеней, выданных в помещениях для голосования в день голосования',
+                    'Число избирательных бюллетеней, выданных в день голосования'):
                     params['issued_ballots_elections_day_inside'] = counter
                 if caption in ('Число избирательных бюллетеней, выданных вне помещения для голосования в день голосования',
-                    'Число избирательных бюллетеней, выданных вне помещений для голосования в день голосования'):
+                    'Число избирательных бюллетеней, выданных вне помещений для голосования в день голосования',
+                    'Число избирательных бюллетеней, выданных вне помещения'):
                     params['issued_ballots_elections_day_outside'] = counter
                 if caption == 'Число погашенных избирательных бюллетеней':
                     params['canceled_ballots'] = counter
-                if caption == 'Число избирательных бюллетеней в переносных ящиках для голосования':
+                if caption in ('Число избирательных бюллетеней в переносных ящиках для голосования',
+                    'Число избирательных бюллетеней в переносных ящиках'):
                     params['ballots_in_portable_boxes'] = counter
                 if caption == 'Число бюллетеней в стационарных ящиках для голосования':
                     params['ballots_in_stationary_boxes'] = counter
@@ -220,7 +226,7 @@ class FinalResults:
                     params['invalid_ballots'] = counter
                 if caption == 'Число действительных избирательных бюллетеней':
                     params['valid_ballots'] = counter
-            if tr.text.strip() == "":
+            if tr.text.strip() in ("", "Число голосов избирателей, поданных за каждый список"):
                 candidate_flag = True
             counter += 1
         return params
@@ -228,3 +234,26 @@ class FinalResults:
     def get_url(self):
         return self._sum_url
 
+if __name__ == "__main__":
+    elect = PresidentElections(2004)
+    fres = elect.get_final_results()
+    # print(fres.get_summary())
+    # print(fres.get_regions()[0])
+    regions = fres.get_regions()
+    regions_counter = 0
+    regions_number = len(regions)
+    tiks = []
+    uiks = []
+    for region in regions:
+        tmp_tiks = fres.get_tiks_by_region_url(region['url'])
+        tiks.extend(tmp_tiks)
+        for tik in tmp_tiks:
+            uiks.extend(fres.get_uiks_by_tik_url(tik['url']))
+        regions_counter += 1
+        print("[{}/{}]{}".format(regions_counter, regions_number, region['name']))
+        if regions_counter > 3:
+            break
+    print(len(tiks))
+    # print(tiks[0])
+    print(len(uiks))
+    print(uiks[0])
