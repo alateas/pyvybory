@@ -134,17 +134,14 @@ class FinalResults:
                     area_item['url'] = a['href']
                 else:
                     if not is_tik_url:
-                        area_item = self._get_left_table_data(url)
+                        area_item = self._get_left_table_data(url, True)
                         area_item['url'] = url
-                        print("Skip to tik level return one element list. Area: {}".format(area_item['name']))
-
                         return [area_item, ]
                 area_data.append(area_item)
             area_data = self._add_params_data(area_data, self._params_list, soup)
             return area_data
         else:
-            area_item = self._get_left_table_data(url)
-            # area_item['name'] = region_name
+            area_item = self._get_left_table_data(url, True)
             area_item['url'] = url
             return [area_item, ]
 
@@ -160,7 +157,7 @@ class FinalResults:
             exit()
         return href
 
-    def _get_left_table_data(self, url):
+    def _get_left_table_data(self, url, get_name = False):
         soup = get_soup(url)
         table = soup.find("td", {'align': 'left', 'style': 'height:100%;', 'valign': 'top'}).find("table")
         res = {}
@@ -177,8 +174,9 @@ class FinalResults:
                     res['candidates'][candidate_name] = candidate_data
             else:
                 res[param] = int(trs[self._params[param]].find_all("td")[2].text)
-        name_tr = soup.find("tr", {"bgcolor": "eeeeee"})
-        res['name'] = name_tr.find_all("td")[1].text
+        if get_name:
+            name_tr = soup.find("tr", {"bgcolor": "eeeeee"})
+            res['name'] = name_tr.find_all("td")[1].text
         return res
         
     def _append_tik_data(self, data_set, tik_index, region_id, tik_id):
