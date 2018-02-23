@@ -132,6 +132,13 @@ class FinalResults:
                 a = td.find('a')
                 if a:
                     area_item['url'] = a['href']
+                else:
+                    if not is_tik_url:
+                        area_item = self._get_left_table_data(url)
+                        area_item['url'] = url
+                        print("Skip to tik level return one element list. Area: {}".format(area_item['name']))
+
+                        return [area_item, ]
                 area_data.append(area_item)
             area_data = self._add_params_data(area_data, self._params_list, soup)
             return area_data
@@ -143,8 +150,15 @@ class FinalResults:
 
     def _get_tik_real_url(self, first_tik_url):
         soup = get_soup(first_tik_url)
-        a = soup.find('a', href=True, text="сайт избирательной комиссии субъекта Российской Федерации")
-        return a['href']        
+        a_tag = soup.find('a', href=True, text="сайт избирательной комиссии субъекта Российской Федерации")
+        if a_tag:
+            href = a_tag.get('href')
+        if (not a_tag) or (not href):
+            print("Error getting tik url from this region url {}".format(first_tik_url))
+            # print(a_tag['href'])
+            print(type(a))
+            exit()
+        return href
 
     def _get_left_table_data(self, url):
         soup = get_soup(url)
@@ -163,6 +177,8 @@ class FinalResults:
                     res['candidates'][candidate_name] = candidate_data
             else:
                 res[param] = int(trs[self._params[param]].find_all("td")[2].text)
+        name_tr = soup.find("tr", {"bgcolor": "eeeeee"})
+        res['name'] = name_tr.find_all("td")[1].text
         return res
         
     def _append_tik_data(self, data_set, tik_index, region_id, tik_id):
@@ -233,27 +249,3 @@ class FinalResults:
     
     def get_url(self):
         return self._sum_url
-
-if __name__ == "__main__":
-    elect = PresidentElections(2004)
-    fres = elect.get_final_results()
-    # print(fres.get_summary())
-    # print(fres.get_regions()[0])
-    regions = fres.get_regions()
-    regions_counter = 0
-    regions_number = len(regions)
-    tiks = []
-    uiks = []
-    for region in regions:
-        tmp_tiks = fres.get_tiks_by_region_url(region['url'])
-        tiks.extend(tmp_tiks)
-        for tik in tmp_tiks:
-            uiks.extend(fres.get_uiks_by_tik_url(tik['url']))
-        regions_counter += 1
-        print("[{}/{}]{}".format(regions_counter, regions_number, region['name']))
-        if regions_counter > 3:
-            break
-    print(len(tiks))
-    # print(tiks[0])
-    print(len(uiks))
-    print(uiks[0])
