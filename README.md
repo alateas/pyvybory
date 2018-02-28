@@ -12,8 +12,12 @@
 ```python
     from pyvybory.pyvybory import PresidentElections
     
+    #создаем объект президенских выборов соответсвующего года
     elections = PresidentElections(2012)
+    
+    Получаем объект итоговых результатов
     final_results = elections.get_final_results()
+    
     #получаем данные по субъектам
     regions = final_results.get_regions()
     
