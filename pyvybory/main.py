@@ -99,9 +99,11 @@ class PresidentCandidates(Candidates):
 
 class FinalResults:
     _sum_url_texts = []
+    _preliminary_sum_url_texts = []
 
     def __init__(self, elections_url):
         self._url_parts = {}
+        self._is_preliminary = False
         self._sum_url = self._get_sum_url(elections_url)
         self._params_list = ['listed_voters', 'got_ballots_by_uik', 
             'issued_ballots_early_voters', 'issued_ballots_elections_day_inside', 
@@ -118,9 +120,19 @@ class FinalResults:
 
     def _get_sum_url(self, elections_url):
         soup = get_soup(elections_url)
+        print("atata: {}".format(elections_url))
         a = self._find_one_of_a(soup, self._sum_url_texts)
         if a:
             return a['href']
+        else:
+            a = self._find_one_of_a(soup, self._preliminary_sum_url_texts)
+            if a:
+                self._is_preliminary = True
+                return a['href']
+        return None
+            
+    def is_preliminary(self):
+        return self._is_preliminary
     
     def _get_row_data(self, row):
         return list(map(lambda td: int(td.text), row.find_all("td")))
@@ -305,8 +317,10 @@ class FinalResults:
 
 class PresidentFinalResults(FinalResults):
     _sum_url_texts = ("Сводная таблица результатов выборов", "Сводная таблица о результатах выборов")
+    _preliminary_sum_url_texts = ("Сводная таблица предварительных итогов голосования", )
 
 class DumaFinalResults(FinalResults):
     _sum_url_texts = ("Сводная таблица итогов голосования по федеральному округу",
         "Сводная таблица результатов выборов",
         "Сводная таблица результатов выборов по федеральному избирательному округу")
+    _preliminary_sum_url_texts = ("Сводная таблица предварительных итогов голосования", )
