@@ -32,7 +32,6 @@ class Elections:
         self._url = self._get_gas_url_by_year(year)
 
     def _get_gas_url_by_year(self, year):
-        # return "https://ya.ru"
         if year not in self._vrn_ids:
             return None
 
@@ -136,7 +135,6 @@ class FinalResults:
 
     def _get_sum_url(self, elections_url):
         soup = get_soup(elections_url)
-        print("atata: {}".format(elections_url))
         a = self._find_one_of_a(soup, self._sum_url_texts)
         if a:
             return a['href']
