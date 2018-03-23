@@ -1,19 +1,21 @@
 from bs4 import BeautifulSoup
-import urllib.request
+import urllib3
 from urllib.error import URLError
 from urllib.parse import urlparse, parse_qs
 
 import socket
 
+urllib3.disable_warnings()
+
 class ParseException(Exception):
     pass
 
 def get_soup(url):
+    print("get_soup: {}".format(url))
     try:
-        with urllib.request.urlopen(url) as response:
-            html = response.read()
-    except URLError as e:
-        raise ParseException("Getting urllib exception \{}\ while getting url: {}".format(e, url))
+        urllib3.disable_warnings()
+        http = urllib3.PoolManager()
+        html = http.request('GET', url).data
     except socket.timeout:
         raise ParseException('Socket timed out while getting URL: {}'.format(url))
     except (socket.timeout, TimeoutError):
@@ -31,12 +33,14 @@ class Elections:
         self._url = self._get_gas_url_by_year(year)
 
     def _get_gas_url_by_year(self, year):
+        # return "https://ya.ru"
         if year not in self._vrn_ids:
             return None
 
         tail_url_part = "/region/izbirkom?action=show&global=1&vrn={}&region=0&prver=0&pronetvd=null".format(self._vrn_ids[year])
         return self.base_url + tail_url_part
-    
+
+
     def get_candidates(self):
         return Candidates(self._url)
     
