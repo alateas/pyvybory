@@ -1,10 +1,23 @@
 from bs4 import BeautifulSoup
 import urllib.request
+from urllib.error import URLError
 from urllib.parse import urlparse, parse_qs
 
+import socket
+
+class ParseException(Exception):
+    pass
+
 def get_soup(url):
-    with urllib.request.urlopen(url) as response:
-        html = response.read()
+    try:
+        with urllib.request.urlopen(url) as response:
+            html = response.read()
+    except URLError as e:
+        raise ParseException("Getting urllib exception \{}\ while getting url: {}".format(e, url))
+    except socket.timeout:
+        raise ParseException('Socket timed out while getting URL: {}'.format(url))
+    except (socket.timeout, TimeoutError):
+        raise ParseException('Socket timed out while getting URL: {}'.format(url))
 
     return BeautifulSoup(html.decode("cp1251"), 'html.parser')
 
