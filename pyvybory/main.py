@@ -11,7 +11,6 @@ class ParseException(Exception):
     pass
 
 def get_soup(url):
-    print("get_soup: {}".format(url))
     try:
         urllib3.disable_warnings()
         http = urllib3.PoolManager()
